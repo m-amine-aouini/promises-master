@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 
 /**
  * Return a function that wraps `nodeStyleFn`. When the returned function is invoked,
- * it will return a promise which will be resolved or rejected, depending on 
+ * it will return a promise which will be resolved or rejected, depending on
  * the execution of the now-wrapped `nodeStyleFn`
  *
  * In other words:
@@ -15,9 +15,26 @@ var Promise = require('bluebird');
  */
 
 var promisify = function(nodeStyleFn) {
- // TODO
-};
+  // TODO
 
+  return function() {
+    var argsForNodeStyleFn = [].slice.call(arguments);
+
+    return new Promise(function(resolve, reject) {
+      var nodeStyleCallback = function(err, results) {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results);
+      };
+
+      // Node style functions expect callback as it's last argument
+      argsForNodeStyleFn.push(nodeStyleCallback);
+
+      nodeStyleFn.apply(null, argsForNodeStyleFn);
+    });
+  };
+};
 
 /**
  * Given an array which contains promises, return a promise that is
@@ -32,8 +49,28 @@ var promisify = function(nodeStyleFn) {
 
 var all = function(arrayOfPromises) {
   // TODO
-};
 
+  var resolvedValues = [];
+  var promisesLeftToResolve = arrayOfPromises.length;
+
+  return new Promise(function(resolve, reject) {
+    arrayOfPromises.forEach(function(promise, i) {
+      promise
+        .then(function(value) {
+          // Fulfilled values keep the same index position as
+          // their promise counterparts in the input array
+          resolvedValues[i] = value;
+
+          if (!--promisesLeftToResolve) {
+            resolve(resolvedValues);
+          }
+        })
+        // Any error thrown by a promise in the input array will
+        // reject the entire promise returned by Promise.all
+        .catch(reject);
+    });
+  });
+};
 
 /**
  * Given an array of promises, return a promise that is resolved or rejected,
@@ -43,6 +80,45 @@ var all = function(arrayOfPromises) {
 
 var race = function(arrayOfPromises) {
   // TODO
+
+  return new Promise(function(resolve, reject) {
+    // Syncronous forEach starts a race to resolve
+    arrayOfPromises.forEach(function(promise) {
+      promise
+        // A promise can only be resolved or rejected once.
+        // Any future calls to `resolve` or `reject` will
+        // just be ignored internally.
+        .then(resolve)
+        .catch(reject);
+    });
+  });
+};
+
+// Alternative solution
+// This one doesn't rely on the promise's ability
+// to internally ignore multiple `resolve` or `reject` calls
+var race = function(arrayOfPromises) {
+  return new Promise(function(resolve, reject) {
+    var resolved = false;
+
+    arrayOfPromises.forEach(function(promise) {
+      promise
+        .then(function(value) {
+          // Only resolve one time
+          if (!resolved) {
+            resolved = true;
+            resolve(value);
+          }
+        })
+        .catch(function(err) {
+          // Only reject one time
+          if (!resolved) {
+            resolved = true;
+            reject(err);
+          }
+        });
+    });
+  });
 };
 
 // Export these functions so we can unit test them

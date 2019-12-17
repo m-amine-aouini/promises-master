@@ -24,10 +24,19 @@ var lib = require('../../lib/advancedChainingLib');
 // `advancedChainingLib.js` file. When creating an API key, you can give it
 // the `Predict on Public and Custom Models` scope
 
-var searchCommonConceptsFromGitHubProfiles = function (githubHandles) {
+var searchCommonConceptsFromGitHubProfiles = function(githubHandles) {
+  return Promise.all(githubHandles.map(lib.getGitHubProfile))
+    .then(function(profiles) {
+      return Promise.all(
+        profiles.map(function(profile) {
+          return lib.predictImage(profile.avatarUrl);
+        })
+      );
+    })
+    .then(lib.getIntersection);
 };
 
 // Export these functions so we can unit test them
 module.exports = {
-  searchCommonConceptsFromGitHubProfiles,
+  searchCommonConceptsFromGitHubProfiles
 };
