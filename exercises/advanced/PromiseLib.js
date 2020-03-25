@@ -14,8 +14,8 @@ var Promise = require('bluebird');
  * expect a callback function as one of its arguments
  */
 
-var promisify = function(nodeStyleFn) {
- // TODO
+var promisify = function (nodeStyleFn) {
+  // TODO
 };
 
 
@@ -30,7 +30,7 @@ var promisify = function(nodeStyleFn) {
  * is rejected with the rejection reason.
  */
 
-var all = function(arrayOfPromises) {
+var all = function (arrayOfPromises) {
   // TODO
 };
 
@@ -41,7 +41,7 @@ var all = function(arrayOfPromises) {
  * the first to be resolved/rejected promise in the passed-in array
  */
 
-var race = function(arrayOfPromises) {
+var race = function (arrayOfPromises) {
   // TODO
 };
 
